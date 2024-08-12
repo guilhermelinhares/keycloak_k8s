@@ -1,0 +1,62 @@
+production: false
+
+## Keycloak resource requests and limits
+## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
+## @param resources.limits The resources limits for the Keycloak containers
+## @param resources.requests The requested resources for the Keycloak containers
+##
+resources:
+  limits: {}
+  requests: {}
+
+extraEnvVars:
+  - name: TZ
+    value: America/Sao_Paulo
+
+
+## Keycloak Autoscaling configuration
+## @param autoscaling.enabled Enable autoscaling for Keycloak
+## @param autoscaling.minReplicas Minimum number of Keycloak replicas
+## @param autoscaling.maxReplicas Maximum number of Keycloak replicas
+## @param autoscaling.targetCPU Target CPU utilization percentage
+## @param autoscaling.targetMemory Target Memory utilization percentage
+##
+autoscaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 6
+  targetCPU: "95"
+  targetMemory: "90"
+
+## Metrics configuration
+##
+metrics:
+  ## @param metrics.enabled Enable exposing Keycloak statistics
+  ## ref: https://github.com/bitnami/containers/tree/main/bitnami/keycloak#enabling-statistics
+  ##
+  enabled: ${prometheus_active}
+
+  ## Prometheus Operator ServiceMonitor configuration
+  ##
+  serviceMonitor:
+    ## @param metrics.serviceMonitor.enabled Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
+    ##
+    enabled: ${prometheus_active}
+    ## @param metrics.serviceMonitor.port Metrics service HTTP port
+    ##
+    # port: https
+    ## @param metrics.serviceMonitor.endpoints [array] The endpoint configuration of the ServiceMonitor. Path is mandatory. Interval, timeout and labellings can be overwritten.
+    ##
+    endpoints:
+      - path: '{{ include "keycloak.httpPath" . }}metrics'
+      - path: '{{ include "keycloak.httpPath" . }}realms/master/metrics'
+
+
+## Keycloak logging configuration
+## ref: https://www.keycloak.org/server/logging
+## @param logging.output Alternates between the default log output format or json format
+## @param logging.level Allowed values as documented: FATAL, ERROR, WARN, INFO, DEBUG, TRACE, ALL, OFF
+##
+logging:
+  output: default
+  level: INFO
